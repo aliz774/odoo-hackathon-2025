@@ -1,0 +1,29 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Maintenance Team -->
+        <record id="maintenance_team_alpha" model="gearguard.maintenance.team">
+            <field name="name">Alpha Team</field>
+            <field name="member_ids" eval="[(4, ref('base.user_admin'))]"/>
+        </record>
+
+        <!-- Equipment -->
+        <record id="equipment_drill" model="gearguard.equipment">
+            <field name="name">Industrial Drill Press</field>
+            <field name="serial_number">DRILL-2024-001</field>
+            <field name="department">Production</field>
+            <field name="maintenance_team_id" ref="maintenance_team_alpha"/>
+            <field name="status">active</field>
+        </record>
+
+        <!-- Request -->
+        <record id="request_drill_repair" model="gearguard.maintenance.request">
+            <field name="subject">Drill Bit Jammed</field>
+            <field name="equipment_id" ref="equipment_drill"/>
+            <field name="maintenance_team_id" ref="maintenance_team_alpha"/>
+            <field name="technician_id" ref="base.user_admin"/>
+            <field name="request_type">corrective</field>
+            <field name="state">new</field>
+        </record>
+    </data>
+</odoo>

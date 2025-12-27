@@ -1,0 +1,20 @@
+<?xml version="1.0" encoding="utf-8"?>
+<odoo>
+    <data noupdate="1">
+        <!-- Technician Rule: See only own requests or team requests -->
+        <record id="rule_gearguard_maintenance_request_technician" model="ir.rule">
+            <field name="name">GearGuard Request: Technician See Own/Team</field>
+            <field name="model_id" ref="model_gearguard_maintenance_request"/>
+            <field name="groups" eval="[(4, ref('group_gearguard_technician'))]"/>
+            <field name="domain_force">['|', ('maintenance_team_id.member_ids', 'in', user.id), ('technician_id', '=', user.id)]</field>
+        </record>
+
+        <!-- Manager/Admin Rule: See all -->
+        <record id="rule_gearguard_maintenance_request_manager" model="ir.rule">
+            <field name="name">GearGuard Request: Manager See All</field>
+            <field name="model_id" ref="model_gearguard_maintenance_request"/>
+            <field name="groups" eval="[(4, ref('group_gearguard_manager'))]"/>
+            <field name="domain_force">[(1, '=', 1)]</field>
+        </record>
+    </data>
+</odoo>
