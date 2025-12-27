@@ -1,45 +1,45 @@
 // Odoo Config
 export const ODOO_CONFIG = {
-  url: '', // Empty string means use current origin (localhost:8080), which Vite proxies to 8069
-  db: 'gearguard', 
+    url: '', // Empty string means use current origin (localhost:8080), which Vite proxies to 8069
+    db: 'mydb02',
 };
 
 // --- XML-RPC Helpers (Lightweight, no extra dependecies) ---
 
 const serializeParams = (params: any[]): string => {
-  return params.map(p => `<param><value>${serializeValue(p)}</value></param>`).join('');
+    return params.map(p => `<param><value>${serializeValue(p)}</value></param>`).join('');
 };
 
 const serializeValue = (value: any): string => {
-  if (typeof value === 'number') {
-    return Number.isInteger(value) ? `<int>${value}</int>` : `<double>${value}</double>`;
-  }
-  if (typeof value === 'string') {
-    return `<string>${value.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</string>`; 
-  }
-  if (typeof value === 'boolean') {
-    return `<boolean>${value ? 1 : 0}</boolean>`;
-  }
-  if (Array.isArray(value)) {
-    return `<array><data>${value.map(v => `<value>${serializeValue(v)}</value>`).join('')}</data></array>`;
-  }
-  if (typeof value === 'object' && value !== null) {
-      const members = Object.keys(value).map(k => `
+    if (typeof value === 'number') {
+        return Number.isInteger(value) ? `<int>${value}</int>` : `<double>${value}</double>`;
+    }
+    if (typeof value === 'string') {
+        return `<string>${value.replace(/&/g, '&amp;').replace(/</g, '&lt;')}</string>`;
+    }
+    if (typeof value === 'boolean') {
+        return `<boolean>${value ? 1 : 0}</boolean>`;
+    }
+    if (Array.isArray(value)) {
+        return `<array><data>${value.map(v => `<value>${serializeValue(v)}</value>`).join('')}</data></array>`;
+    }
+    if (typeof value === 'object' && value !== null) {
+        const members = Object.keys(value).map(k => `
         <member>
             <name>${k}</name>
             <value>${serializeValue(value[k])}</value>
         </member>
       `).join('');
-      return `<struct>${members}</struct>`;
-  }
-  return '';
+        return `<struct>${members}</struct>`;
+    }
+    return '';
 };
 
 const parseXMLResponse = async (response: Response): Promise<any> => {
     const text = await response.text();
     const parser = new DOMParser();
     const xmlDoc = parser.parseFromString(text, "text/xml");
-    
+
     // Check for Fault
     const fault = xmlDoc.querySelector('methodResponse > fault');
     if (fault) {
@@ -53,7 +53,7 @@ const parseXMLResponse = async (response: Response): Promise<any> => {
 
 const parseValue = (node: Element | null): any => {
     if (!node) return null;
-    
+
     const child = node.firstElementChild;
     if (!child) return node.textContent;
 
@@ -75,7 +75,7 @@ const parseValue = (node: Element | null): any => {
         });
         return obj;
     }
-    
+
     return child.textContent;
 };
 
@@ -119,13 +119,13 @@ export const OdooAPI = {
     // --- Dashboard Specifics ---
     getStats: async (uid: number, password: string) => {
         const model = 'gearguard.maintenance.request';
-        
+
         // Parallel fetch for dashboard
         const [total, inProgress, completed, overdue] = await Promise.all([
             OdooAPI.execute(uid, password, model, 'search_count', [[['state', '!=', 'scrap']]]),
             OdooAPI.execute(uid, password, model, 'search_count', [[['state', '=', 'in_progress']]]),
             OdooAPI.execute(uid, password, model, 'search_count', [[['state', '=', 'repaired']]]),
-            OdooAPI.execute(uid, password, model, 'search_count', [[['overdue', '=', true]]]) 
+            OdooAPI.execute(uid, password, model, 'search_count', [[['overdue', '=', true]]])
         ]);
 
         return {
@@ -135,21 +135,21 @@ export const OdooAPI = {
             overdue: overdue
         };
     },
-    
+
     // --- Equipment Helper ---
     createEquipment: async (uid: number, password: string, name: string) => {
-         const model = 'gearguard.equipment';
-         // Find generic team or first team
-         const teams = await OdooAPI.execute(uid, password, 'gearguard.maintenance.team', 'search', [[]], {limit: 1});
-         const teamId = teams[0] || 1;
+        const model = 'gearguard.equipment';
+        // Find generic team or first team
+        const teams = await OdooAPI.execute(uid, password, 'gearguard.maintenance.team', 'search', [[]], { limit: 1 });
+        const teamId = teams[0] || 1;
 
-         const id = await OdooAPI.execute(uid, password, model, 'create', [{
-             name: name,
-             maintenance_team_id: teamId,
-             status: 'active',
-             serial_number: `client-created-${Date.now()}`
-         }]);
-         return id;
+        const id = await OdooAPI.execute(uid, password, model, 'create', [{
+            name: name,
+            maintenance_team_id: teamId,
+            status: 'active',
+            serial_number: `client-created-${Date.now()}`
+        }]);
+        return id;
     },
 
     // --- Auth/Registration ---
@@ -157,14 +157,15 @@ export const OdooAPI = {
         // PROXY REGISTRATION: Uses Admin creds to create user
         // WARNING: insecure for production, dev only
         try {
-            const adminUid = await OdooAPI.authenticate(ODOO_CONFIG.db, 'admin', 'admin');
-            
+            const adminPass = 'Sib@12345';
+            const adminUid = await OdooAPI.authenticate(ODOO_CONFIG.db, 'sibtainali786110@gmail.com', adminPass);
+
             // Check if user exists
-            const existing = await OdooAPI.execute(adminUid, 'admin', 'res.users', 'search_count', [[['login', '=', email]]]);
+            const existing = await OdooAPI.execute(adminUid, adminPass, 'res.users', 'search_count', [[['login', '=', email]]]);
             if (existing > 0) throw new Error("Email already registered");
 
             // Create User
-            const newUserId = await OdooAPI.execute(adminUid, 'admin', 'res.users', 'create', [{
+            const newUserId = await OdooAPI.execute(adminUid, adminPass, 'res.users', 'create', [{
                 name: name,
                 login: email,
                 password: pass,
