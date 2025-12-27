@@ -47,13 +47,13 @@
             <form string="Maintenance Request">
                 <header>
                     <button name="action_in_progress" string="In Progress" type="object" class="btn-primary" 
-                            states="new"/>
+                            invisible="state != 'new'"/>
                     <button name="action_repaired" string="Repaired" type="object" class="btn-success" 
-                            states="in_progress"/>
+                            invisible="state != 'in_progress'"/>
                     <button name="action_scrap" string="Scrap" type="object" class="btn-danger" 
-                            states="in_progress,new"/>
+                            invisible="state not in ['in_progress', 'new']"/>
                     <button name="action_new" string="Reset to New" type="object" 
-                            states="scrap,repaired"/>
+                            invisible="state not in ['scrap', 'repaired']"/>
                     <field name="state" widget="statusbar" statusbar_visible="new,in_progress,repaired,scrap"/>
                 </header>
                 <sheet>
@@ -66,7 +66,7 @@
                             <field name="equipment_id"/>
                             <field name="request_type"/>
                             <field name="scheduled_date"/>
-                            <field name="duration" attrs="{'required': [('state', '=', 'repaired')]}"/>
+                            <field name="duration" required="state == 'repaired'"/>
                         </group>
                         <group>
                             <field name="maintenance_team_id"/>
@@ -90,7 +90,7 @@
         <field name="name">gearguard.maintenance.request.calendar</field>
         <field name="model">gearguard.maintenance.request</field>
         <field name="arch" type="xml">
-            <calendar string="Maintenance Requests" date_start="scheduled_date" color="technician_id" domain="[('request_type', '=', 'preventive')]">
+            <calendar string="Maintenance Requests" date_start="scheduled_date" color="technician_id">
                 <field name="subject"/>
                 <field name="technician_id"/>
                 <field name="equipment_id"/>
@@ -109,7 +109,7 @@
                 <field name="technician_id"/>
                 <field name="scheduled_date"/>
                 <field name="state" widget="badge" decoration-success="state == 'repaired'" decoration-info="state == 'in_progress'" decoration-danger="state == 'scrap'"/>
-                <field name="overdue" invisible="1"/>
+                <field name="overdue" column_invisible="True"/>
             </tree>
         </field>
     </record>

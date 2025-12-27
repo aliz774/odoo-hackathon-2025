@@ -19,10 +19,10 @@ Key features:
         'security/security.xml',
         'security/ir.model.access.csv',
         'security/rules.xml',
-        'views/menus.xml',
         'views/equipment_views.xml',
         'views/maintenance_team_views.xml',
         'views/maintenance_request_views.xml',
+        'views/menus.xml',
     ],
     'demo': [
         'data/demo_data.xml',

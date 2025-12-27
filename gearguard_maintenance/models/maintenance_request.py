@@ -47,6 +47,30 @@ class GearGuardMaintenanceRequest(models.Model):
              if equipment.status == 'scrap':
                  raise ValidationError(_("Cannot create maintenance request for scrapped equipment."))
                  
+        # Auto-Assign Technician if missing
+        if not vals.get('technician_id') and vals.get('maintenance_team_id') and vals.get('scheduled_date'):
+            team = self.env['gearguard.maintenance.team'].browse(vals['maintenance_team_id'])
+            technicians = team.member_ids
+            if technicians:
+                # Find the technician with the LEAST count of requests on the scheduled date
+                best_tech = None
+                min_load = float('inf')
+                
+                for tech in technicians:
+                    # Count requests for this tech on this date
+                    load = self.env['gearguard.maintenance.request'].search_count([
+                        ('technician_id', '=', tech.id),
+                        ('scheduled_date', '=', vals['scheduled_date']),
+                        ('state', 'not in', ['repaired', 'scrap'])
+                    ])
+                    
+                    if load < min_load:
+                        min_load = load
+                        best_tech = tech.id
+                
+                if best_tech:
+                    vals['technician_id'] = best_tech
+
         return super(GearGuardMaintenanceRequest, self).create(vals)
 
     @api.depends('maintenance_team_id')
@@ -85,6 +109,7 @@ class GearGuardMaintenanceRequest(models.Model):
         self.state = 'scrap'
         if self.equipment_id:
             self.equipment_id.status = 'scrap'
+        return True
 
     def action_new(self):
         self.state = 'new'
